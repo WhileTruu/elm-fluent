@@ -3,8 +3,9 @@ module Fluent.ParserTest exposing (..)
 import Expect exposing (Expectation)
 import Fluent.Ast exposing (..)
 import Fluent.Parser
-import Fuzz exposing (Fuzzer, int, list, string)
+import Fuzz exposing (Fuzzer)
 import Parser
+import Random exposing (Generator)
 import Test exposing (..)
 
 
@@ -18,6 +19,16 @@ parserTest =
                     (Ok
                         [ EntryResource
                             (MessageEntry { id = "hello", value = "Hello, world!" })
+                        ]
+                    )
+        , test "parses single line string messages without newline" <|
+            \_ ->
+                Expect.equal
+                    (Parser.run Fluent.Parser.parser <| "hello = Hello, world!")
+                    (Ok
+                        [ EntryResource <|
+                            MessageEntry
+                                { id = "hello", value = "Hello, world!" }
                         ]
                     )
         ]
@@ -126,8 +137,7 @@ you-moved-left = You moved left
 
 you-moved-right = You moved right
 
-go-left-or-right-html = Go <a data-left>left</a> or <a data-right>right</a>
-"""
+go-left-or-right-html = Go <a data-left>left</a> or <a data-right>right</a>"""
 
 
 wholeFileExampleExpectation : List Resource

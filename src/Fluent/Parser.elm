@@ -77,10 +77,13 @@ multiline =
                     else
                         Parser.Loop (line :: lines)
             in
-            Parser.succeed conclusion
-                |. Parser.chompIf isNewLine
-                |= (Parser.chompWhile (\c -> c == ' ') |> Parser.getChompedString)
-                |= (Parser.chompUntilEndOr "\n" |> Parser.getChompedString)
+            Parser.oneOf
+                [ Parser.end |> Parser.map (\_ -> Parser.Done (String.join "\n" (List.reverse lines)))
+                , Parser.succeed conclusion
+                    |. Parser.chompIf isNewLine
+                    |= (Parser.chompWhile (\c -> c == ' ') |> Parser.getChompedString)
+                    |= (Parser.chompUntilEndOr "\n" |> Parser.getChompedString)
+                ]
     in
     Parser.oneOf
         [ Parser.succeed (\a b -> a ++ b)
