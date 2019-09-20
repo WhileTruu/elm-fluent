@@ -3,9 +3,7 @@ module Fluent.ParserTest exposing (..)
 import Expect exposing (Expectation)
 import Fluent.Ast exposing (..)
 import Fluent.Parser
-import Fuzz exposing (Fuzzer)
 import Parser
-import Random exposing (Generator)
 import Test exposing (..)
 
 
