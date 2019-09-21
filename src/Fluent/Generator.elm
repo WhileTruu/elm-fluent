@@ -1,4 +1,4 @@
-module Fluent.Encoder exposing (..)
+module Fluent.Generator exposing (File, ftlToElm)
 
 import Elm.CodeGen
 import Elm.Pretty
@@ -9,19 +9,28 @@ import Elm.Syntax.Node as S
 import Elm.Syntax.Range as S
 import Elm.Syntax.TypeAnnotation as S
 import Fluent.Ast as Ast exposing (Message)
+import Fluent.Parser
+import Parser
 import Pretty
 
 
-encode : List String -> List Ast.Resource -> String
-encode moduleName resources =
-    Elm.CodeGen.file
-        (Elm.CodeGen.normalModule moduleName [ S.FunctionExpose ".." ])
-        []
-        (resources
-            |> List.filterMap resourceToDeclaration
-        )
-        []
-        |> (Elm.Pretty.pretty >> Pretty.pretty 80)
+type alias File =
+    { name : List String, content : String }
+
+
+ftlToElm : File -> Result (List Parser.DeadEnd) File
+ftlToElm fluentFile =
+    Parser.run Fluent.Parser.parser fluentFile.content
+        |> Result.map (List.filterMap resourceToDeclaration)
+        |> Result.map
+            (\a ->
+                Elm.CodeGen.file
+                    (Elm.CodeGen.normalModule fluentFile.name [ S.FunctionExpose ".." ])
+                    []
+                    a
+                    []
+            )
+        |> Result.map (Elm.Pretty.pretty >> Pretty.pretty 80 >> File fluentFile.name)
 
 
 resourceToDeclaration : Ast.Resource -> Maybe S.Declaration
@@ -35,10 +44,10 @@ resourceToDeclaration resource =
                 Ast.TermEntry ->
                     Nothing
 
-                Ast.CommentLineEntry string ->
+                Ast.CommentLineEntry _ ->
                     Nothing
 
-        Ast.JunkResource string ->
+        Ast.JunkResource _ ->
             Nothing
 
 
