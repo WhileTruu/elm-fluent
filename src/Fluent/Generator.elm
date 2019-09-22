@@ -12,6 +12,7 @@ import Fluent.Ast as Ast exposing (Message)
 import Fluent.Parser
 import Parser
 import Pretty
+import String.Extra
 
 
 type alias File =
@@ -53,17 +54,25 @@ resourceToDeclaration resource =
 
 messageToFunction : Message -> S.Function
 messageToFunction message =
+    let
+        name : S.Node String
+        name =
+            message.id
+                |> String.Extra.camelize
+                |> String.Extra.decapitalize
+                |> S.Node S.emptyRange
+    in
     { documentation = Nothing
     , signature =
         Just <|
             S.Node S.emptyRange
-                { name = S.Node S.emptyRange message.id
+                { name = name
                 , typeAnnotation = S.Node S.emptyRange (S.GenericType "String")
                 }
     , declaration =
         S.Node
             S.emptyRange
-            { name = S.Node S.emptyRange message.id
+            { name = name
             , arguments = []
             , expression = S.Node S.emptyRange (S.Literal message.value)
             }
